@@ -1,0 +1,1 @@
+This is a project, inspired by a class, where I am optimizing an algorithim to apply a filter using convolution across an image. 
