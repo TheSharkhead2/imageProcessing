@@ -5,7 +5,7 @@ using LinearAlgebra
 using Dates
 
 #Load monkeyImage 
-image = load("image.jpg")
+image = load("images/image.jpg")
 
 imageArray = channelview(image) #Julia uses a special storage for images that is different from arrays. It is easier to manipulate the image in array form. This is converting it to an array
 
@@ -86,14 +86,14 @@ function convolution_filter(image, filter)
 end
 
 startTime = now() #take the time before running the function
-filteredImage = convolution_filter(imageArray, smallBlur)
+filteredImage = convolution_filter(imageArray, strongSharpenFilter)
 totalTime = now() - startTime #subtract the start time from the time after running the function to get the time the function took to run
 filteredImage = colorview(RGB, filteredImage) #convert image back to Julia image format (from array of shape (3,i,j))
 
 println("The convolution function took $totalTime to run")
 
-println("Displaying original image")
-imshow(image) 
+# println("Displaying original image")
+# imshow(image) 
 
 println("Displaying image with filter applied")
 imshow(filteredImage)
