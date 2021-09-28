@@ -4,37 +4,6 @@ using ImageView
 using LinearAlgebra
 using Dates
 
-#Load monkeyImage 
-image = load("images/image.jpg")
-
-imageArray = channelview(image) #Julia uses a special storage for images that is different from arrays. It is easier to manipulate the image in array form. This is converting it to an array
-
-#define the same filter as the python implementation uses
-shiftingFilter = zeros((19,19)) #same size of filter in zeros
-shiftingFilter[1,19] = 1 #set top right value to a 1
-
-strongSharpenFilter = [
-    -1 -1 -1 -1 -1 -1 -1 -1 -1;
-    -1 -1 -1 -1 -1 -1 -1 -1 -1;
-    -1 -1 -1 -1 -1 -1 -1 -1 -1;
-    -1 -1 -1 -1 -1 -1 -1 -1 -1;
-    -1 -1 -1 -1 80 -1 -1 -1 -1;
-    -1 -1 -1 -1 -1 -1 -1 -1 -1;
-    -1 -1 -1 -1 -1 -1 -1 -1 -1;
-    -1 -1 -1 -1 -1 -1 -1 -1 -1;
-    -1 -1 -1 -1 -1 -1 -1 -1 -1;
-]
-
-smallBlur = [
-    1 1 1 1 1;
-    1 1 1 1 1;
-    1 1 1 1 1;
-    1 1 1 1 1;
-    1 1 1 1 1;
-]
-smallBlur = smallBlur * 1/sum(smallBlur)
-
-
 function convolution_filter(image, filter)
     """
     Applies a filter, filter, to the inputed image, image, using convolution. 
@@ -57,6 +26,8 @@ function convolution_filter(image, filter)
         An array representing the output image with the same dimensions as the input image
 
     """
+
+    startTime = now() #get exact time on function start to later calculate time it took to run
 
     out = zeros(size(image)) #create blank image array with same dimentions as input array 
 
@@ -81,21 +52,10 @@ function convolution_filter(image, filter)
         end
 
     end
+
+    totalTime = now() - startTime #take different between current time and start time to get time function took to run
+    prinln("Filter ran on image in $totalTime") #display runtime in print statement
+
     return out
 
 end
-
-startTime = now() #take the time before running the function
-filteredImage = convolution_filter(imageArray, strongSharpenFilter)
-totalTime = now() - startTime #subtract the start time from the time after running the function to get the time the function took to run
-filteredImage = colorview(RGB, filteredImage) #convert image back to Julia image format (from array of shape (3,i,j))
-
-println("The convolution function took $totalTime to run")
-
-# println("Displaying original image")
-# imshow(image) 
-
-println("Displaying image with filter applied")
-imshow(filteredImage)
-
-sleep(20) #delay at end of file such that you can actually see displayed images (otherwise windows close)
