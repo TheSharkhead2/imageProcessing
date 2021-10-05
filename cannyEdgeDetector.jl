@@ -148,7 +148,57 @@ function non_max_suppression(edgeIntensity, angle)
 
 end
 
+function double_threshold(image, lowThresholdRatio=0.05, highThresholdRatio=0.5)
+    """
+    Applies double threshold to image, removing "wet garbage," and classifying weak
+    and strong edges. 
 
+    Parameters
+    ----------
+
+    image : array
+        Array representing image (having sobel filters and non-max suppression run on 
+        it)
+        
+    lowThresholdRatio : float 
+        Sets edge low threshold to this ratio multiplied by high threshold 
+
+    highThresholdRation: float 
+        Sets edge high threshold to this ratio multiplied by maximum edge intensity
+        in image. 
+
+    Returns
+    -------
+
+    image : array 
+        Array representing image with thresholds ran on it 
+    
+    weak : int 
+        Value of a weak edge in image
+
+    strong : int 
+        Value of strong edge in image
+
+    """
+
+    #set high and low threshold values
+    highThreshold = maximum(image) * highThresholdRatio
+    lowThreshold = highThreshold * lowThresholdRatio
+
+    #save image dimensions
+    xDim, yDim = size(image)
+
+    #set constant values for strong and weak edges
+    weak = 25
+    strong = 255
+
+    image = ifelse.(image .>= highThreshold, strong, image) #if pixel value is above high threshold, set to strong value 
+    image = ifelse.(image .< lowThreshold, 0, image) #if pixel value is below low threshold, set to 0
+    image = ifelse.((lowThreshold .<= image .< highThreshold), weak, image) #if pixel value is inbetween high and low threshold, set to weak value
+
+    (image, weak, strong)
+
+end
 
 function canny_edge_detection(RGBimage, gaussianDim=9, gaussianSigma=1)
     """
@@ -165,10 +215,11 @@ function canny_edge_detection(RGBimage, gaussianDim=9, gaussianSigma=1)
 
     sobelImage = sobel_filter(image) #run sobel filters on image to get edge intensity and direction
 
-    nonMaxSupprImg = non_max_suppression(sobelImage[1], sobelImage[2])
+    nonMaxSupprImg = non_max_suppression(sobelImage[1], sobelImage[2]) #run non maximum suppression on image
 
-    nonMaxSupprImg
+    doubleThreshold = double_threshold(nonMaxSupprImg) #run double thresholding on image 
+
 end
 
-imshow(canny_edge_detection(RGBimage))
+imshow(canny_edge_detection(RGBimage)[1])
 sleep(20)
