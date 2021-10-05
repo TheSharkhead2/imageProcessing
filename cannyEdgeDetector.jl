@@ -3,7 +3,7 @@ include("./filters.jl")
 using Images
 using ImageView
 
-RGBimage = load("images/image.jpg") #load image
+RGBImage = load("images/image.jpg") #load image
 
 function sobel_filter(image)
     """
@@ -249,7 +249,7 @@ end
 
 
 
-function canny_edge_detection(RGBimage, gaussianDim=9, gaussianSigma=1)
+function canny_edge_detection(RGBimage; lowThresholdRatio=0.05, highThresholdRatio=0.09, gaussianDim=9, gaussianSigma=1)
     """
 
     """
@@ -270,7 +270,9 @@ function canny_edge_detection(RGBimage, gaussianDim=9, gaussianSigma=1)
 
     outImage = hysteresis(doubleThreshold[1], doubleThreshold[2], doubleThreshold[3]) #run hysteresis on image to turn weak edges into strong edges
 
+    outImage
+
 end
 
-imshow(canny_edge_detection(RGBimage))
+imshow(canny_edge_detection(RGBImage; gaussianDim=15, gaussianSigma=4))
 sleep(20)
