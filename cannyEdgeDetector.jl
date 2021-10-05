@@ -148,7 +148,7 @@ function non_max_suppression(edgeIntensity, angle)
 
 end
 
-function double_threshold(image, lowThresholdRatio=0.05, highThresholdRatio=0.5)
+function double_threshold(image, lowThresholdRatio=0.05, highThresholdRatio=0.09)
     """
     Applies double threshold to image, removing "wet garbage," and classifying weak
     and strong edges. 
@@ -200,6 +200,55 @@ function double_threshold(image, lowThresholdRatio=0.05, highThresholdRatio=0.5)
 
 end
 
+function hysteresis(image, weak, strong)
+    """
+    Performs hysteresis on image. Turns weak edges into strong edges if the weak edge
+    is boardered by a strong one. 
+
+    Parameters
+    ----------
+
+    image : array 
+        Array representing image edges up to double thresholding
+
+    weak : int 
+        Value of weak edges
+
+    strong : int 
+        Value of strong edges
+    
+    Returns
+    -------
+
+
+
+    """
+
+    xDim, yDim = size(image) #save image dimensions 
+
+    paddedImage = padarray(image, Pad(1,1)) #pad image by 1 one on each side to remove out of index errors
+
+    #loop through all pixels in image
+    for x in 1:xDim 
+        for y in 1:yDim
+            if image[x,y] == weak #if it is a weak edge 
+                #if any of the boarding pixels are strong, set pixel to strong as well
+                if (( paddedImage[x+1,y+1] == strong ) || ( paddedImage[x+1,y] == strong ) || ( paddedImage[x+1,y-1] == strong ) ||
+                    ( paddedImage[x,y+1] == strong ) || ( paddedImage[x,y-1] == strong ) || 
+                    ( paddedImage[x-1,y+1] == strong ) || ( paddedImage[x-1,y] == strong ) || ( paddedImage[x-1,y-1] == strong ))
+                    image[x,y] = strong 
+                else #otherwise it isn't an edge
+                    image[x,y] = 0
+                end
+            end
+        end
+    end
+
+    image
+end
+
+
+
 function canny_edge_detection(RGBimage, gaussianDim=9, gaussianSigma=1)
     """
 
@@ -219,7 +268,9 @@ function canny_edge_detection(RGBimage, gaussianDim=9, gaussianSigma=1)
 
     doubleThreshold = double_threshold(nonMaxSupprImg) #run double thresholding on image 
 
+    outImage = hysteresis(doubleThreshold[1], doubleThreshold[2], doubleThreshold[3]) #run hysteresis on image to turn weak edges into strong edges
+
 end
 
-imshow(canny_edge_detection(RGBimage)[1])
+imshow(canny_edge_detection(RGBimage))
 sleep(20)
