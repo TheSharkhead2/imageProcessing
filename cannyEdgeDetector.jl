@@ -34,13 +34,13 @@ function sobel_filter(image)
 
 
     #define sobel filters in x and y direction (derivative finders). Used filters from: https://towardsdatascience.com/canny-edge-detection-step-by-step-in-python-computer-vision-b49c3a2d8123
-    Sx = [
+    Sy = [
         -1 0 1;
         -2 0 2;
         -1 0 1; 
     ]
 
-    Sy = [
+    Sx = [
         1 2 1;
         0 0 0;
         -1 -2 -1;
@@ -50,12 +50,96 @@ function sobel_filter(image)
     imageX = convolution_filter(image, Sx)
     imageY = convolution_filter(image, Sy)
 
-    intensity = hypot.(imageX, imageY) #find the "hypotonuse" of each of the edge intensities (sqrt(x^2 + y^2)). This will result in the "intensity" of the edge in its direction as we are looking at x direction edges and y direction edges
+    intensity = hypot.(imageY, imageX) #find the "hypotonuse" of each of the edge intensities (sqrt(x^2 + y^2)). This will result in the "intensity" of the edge in its direction as we are looking at x direction edges and y direction edges
     intensity = intensity .* (255 / maximum(intensity)) #cap each of the pixel edge intensities at 255
 
-    edgeAngle = atan.(imageY, imageX) #use arctan to find the angle at which each edge is. 
+    edgeAngle = atan.(imageX, imageY) #use arctan to find the angle at which each edge is. 
 
     (intensity, edgeAngle)
+end
+
+function non_max_suppression(edgeIntensity, angle)
+    """
+    Perform non-maximum suppression on the edges found with sobel filer. 
+
+    Parameters
+    ----------
+
+    edgeIntensity : array 
+        Array with each x,y element in array representing the intensity of the edge
+        in the image at the point x,y
+    
+    angle : array 
+        Array with each element x,y representing the angle at which the edge is in the
+        image at that point
+
+    """
+
+    xDim, yDim = size(edgeIntensity) #save shape of image
+
+    out = zeros((xDim, yDim)) #create empty array for output
+
+    angle[angle .< 0] .+= pi #for angles below zero, set them to angles in opposite direction (same "direction" just negative of it)
+
+    #loop over every pixel
+    for x in 1:xDim
+        for y in 1:yDim 
+            #variables used to hold values for pixel "in front of" and "behind" pixel we are looking at. Default to 255 if program doesn't properly handle all angle cases
+            q = 255
+            r = 255
+
+            #for each if statement below: which pixels angle coorisponds to, records two values of edge intensity at the two coorisponding pixels
+            #looking at angles within pi/4 cone of straight up or down. 
+            if (0 <= angle[x,y] < pi/8) || ( (7*pi)/8 <= angle[x,y] <= pi )
+                if x+1 <= xDim #make sure x+1 isn't greater than image dimensions
+                    q = edgeIntensity[x+1,y]
+                end
+
+                if x-1 >= 1 #make sure x-1 is in image dimensions, ie not below 1
+                    r = edgeIntensity[x-1, y]
+                end
+            
+            #looking at angles within pi/4 cone of pi/4, diagonal following line y=x
+            elseif (pi/8 <= angle[x,y] < (3*pi)/8)
+                if (x+1 <= xDim) && (y+1 <= yDim) #make sure new pixel is in image dimensions 
+                    q = edgeIntensity[x+1, y+1]
+                end
+
+                if (x-1 >= 1) && (y-1 >= 1) #make sure in image dimensions 
+                    r = edgeIntensity[x-1,y-1]
+                end
+            
+            #looing at pi/4 cone around directly left or right
+            elseif ((3*pi)/8 <= angle[x,y] < (5*pi)/8)
+                if (y+1 <= yDim) #make sure in image dimensions
+                    q = edgeIntensity[x, y+1]
+                end
+
+                if (y-1 >= 1) #make sure in image dimensions 
+                    r = edgeIntensity[x,y-1]
+                end 
+
+            #looking at pi/4 cone around direction coorisponding to line in y=-x direction
+            elseif ((5*pi)/8 <= angle[x,y] < (7*pi)/8)
+                if (x+1 <= xDim) && (y-1 >= 1) #make sure in image dimensions 
+                    q = edgeIntensity[x+1, y-1]
+                end
+
+                if (x-1 >= 1) && (y+1 <= yDim) #make sure in image dimensions 
+                    r = edgeIntensity[x-1,y+1]
+                end 
+            end
+
+            if (edgeIntensity[x,y] >= q) && (edgeIntensity[x,y] >= r) #if the edge intensity at the center pixel is the same or higher than those on either side in the direction of the edge, keep the edge
+                out[x,y] = edgeIntensity[x,y]
+            else #otherwise, remove edge intensity at that point
+                out[x,y] = 0
+            end
+        end
+    end
+
+    out
+
 end
 
 
@@ -75,8 +159,10 @@ function canny_edge_detection(RGBimage, gaussianDim=9, gaussianSigma=1)
 
     sobelImage = sobel_filter(image) #run sobel filters on image to get edge intensity and direction
 
-    sobelImage
+    nonMaxSupprImg = non_max_suppression(sobelImage[1], sobelImage[2])
+
+    nonMaxSupprImg
 end
 
-imshow(canny_edge_detection(RGBimage)[1])
+imshow(canny_edge_detection(RGBimage))
 sleep(20)
