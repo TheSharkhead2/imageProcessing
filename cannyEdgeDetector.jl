@@ -73,6 +73,12 @@ function non_max_suppression(edgeIntensity, angle)
         Array with each element x,y representing the angle at which the edge is in the
         image at that point
 
+    Returns
+    -------
+
+    out : array
+        Array representing edges of image now with non-maximum suppression run on it
+
     """
 
     xDim, yDim = size(edgeIntensity) #save shape of image
