@@ -220,7 +220,8 @@ function hysteresis(image, weak, strong)
     Returns
     -------
 
-
+    image : array
+        Array for image with hysteresis ran on it
 
     """
 
@@ -251,6 +252,32 @@ end
 
 function canny_edge_detection(RGBimage; lowThresholdRatio=0.05, highThresholdRatio=0.09, gaussianDim=9, gaussianSigma=1)
     """
+    Performs canny edge detection on Julia image. Returns new image currently with 255 as an edge and 0
+    as no edge. (updating this to be convertable back to Julia image, between 0 and 1, would be ideal)
+
+    Parameters
+    ----------
+
+    RGBimage : Julia Image
+        Julia image from load(image_path)
+    
+    lowThresholdRatio : Float, optional
+        Default: 0.05. Ratio of high threshold which counts for weak edge 
+
+    highThresholdRatio : Float, optional 
+        Default: 0.09. Ratio of maximum edge value for strong edge 
+
+    gaussianDim : Int
+        Odd Integer representing dimension of Gaussian blur filter
+
+    gaussianSigma : Float 
+        Sigma value for Gaussian 
+
+    Returns
+    -------
+
+    outImage : Array 
+        Array representing image edges. 
 
     """
 
