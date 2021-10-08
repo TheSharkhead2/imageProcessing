@@ -1,8 +1,6 @@
 include("./convolutionFilter.jl")
 include("./filters.jl")
-using Images
-using ImageView
-using Statistics
+using Images, ImageView, FileIO, Statistics
 
 RGBImage = load("images/image.jpg") #load image
 
@@ -366,9 +364,17 @@ function canny_edge_detection(RGBimage; lowThresholdRatio=0.05, highThresholdRat
 
     outImage = hysteresis(doubleThreshold[1], doubleThreshold[2], doubleThreshold[3]) #run hysteresis on image to turn weak edges into strong edges
 
-    outImage #maybe add "uncompressor" at the end here to go back to original dimensions of image. 
+    outImage = outImage .* (1/maximum(outImage)) #cap output image at 1 for max value of each pixel
+
+    outImage
+    #maybe add "uncompressor" at the end here to go back to original dimensions of image. 
 
 end
 
-imshow(canny_edge_detection(RGBImage; lowThresholdRatio=0.05, highThresholdRatio=0.08, gaussianDim=21, gaussianSigma=4))
+edgeImage = canny_edge_detection(RGBImage; lowThresholdRatio=0.5, highThresholdRatio=0.9, gaussianDim=9, gaussianSigma=15)
+
+edgeImage = colorview(Gray, edgeImage)
+
+imshow(edgeImage)
+save("imageEdges.jpg", edgeImage)
 sleep(30)
