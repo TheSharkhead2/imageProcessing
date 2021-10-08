@@ -2,6 +2,7 @@ include("./convolutionFilter.jl")
 include("./filters.jl")
 using Images
 using ImageView
+using Statistics
 
 RGBImage = load("images/image.jpg") #load image
 
@@ -248,6 +249,58 @@ function hysteresis(image, weak, strong)
     image
 end
 
+function compression(image; n=3)
+    """
+    Compresses image by n^2 by compacting every nxn area in image into 1 pixel. 
+
+    Parameters
+    ----------
+
+    image : array
+        Array for image 
+    
+    n : int, optional
+        Default: 3. Size of area that will be collapsed into a single pixel. The size of the 
+        image will be reduced by a factor of 1/n^2. Only currently works for odd n
+
+    """
+
+    xDim, yDim = size(image) #save x and y dimensions of image
+
+    filterOverlap = Int(floor(n/2)) #calculate amount compression filter will overlap outside image
+
+    centerCoord = 1 + filterOverlap #set value x,y (both equal) that will be taken as "center." On odd sized filters, this is actually just the center. On even it will be offset one right and one down
+
+    minusAmount = filterOverlap #amount "filter" will go up or left. For a 3x3 this is just 1, for a 2x2 same. Odd has same as plus amount where even is 1 extra. 
+    plusAmount = n - centerCoord #amount to the right or down "filter" extends from center. This will be same as above for odd and 1 less for even. 
+
+    #amount extra needed to be added as padding in either direction to account for even divisability 
+    xExtra = n-(xDim % n)
+    yExtra = n-(yDim % n)
+
+    padWidth = Pad((minusAmount, plusAmount+xExtra), (minusAmount, plusAmount+yExtra)) #set pad amount to padding for overflow from filter and excess to account for having to divide dimensions by compression amount
+    image = padarray(image, padWidth) #pad array
+
+    out = zeros(( Int((xDim+xExtra)/n), Int((yDim+yExtra)/n) )) #set empty output image array in size of new, compressed image
+
+    #variables to keep track of "location" in output image
+    xOut = 1
+    yOut = 1
+            
+    #Loop through every n pixels in image, meaning each square nxn around index looped through coorisponds to one pixel in output image
+    for x in 1:n:(xDim+xExtra) 
+        for y in 1:n:(yDim+yExtra) 
+            #set output pixel to average of coorisponding pixels in original image
+            out[xOut, yOut] = mean(image[ x-minusAmount:x+plusAmount, y-minusAmount:y+plusAmount ])
+
+            yOut += 1 #increment y index
+        end
+        xOut += 1 #increment x index
+        yOut = 1 #reset y index
+    end
+
+    out
+end
 
 
 function canny_edge_detection(RGBimage; lowThresholdRatio=0.05, highThresholdRatio=0.09, gaussianDim=9, gaussianSigma=1)
@@ -285,6 +338,19 @@ function canny_edge_detection(RGBimage; lowThresholdRatio=0.05, highThresholdRat
 
     image = channelview(greyImage) #convert image to channel view of image
 
+    xDim, yDim = size(image) #save dimensions of image
+
+    if (xDim/1000 > 2) || (yDim/1000 > 2) #if the image resolution is sufficiently large, compress it. This is for better edge detection (hopefully) and processing times
+        #take the largest of x or y to determine the compression amount (to get largest dimension closest to 1500 pixels)
+        if xDim > yDim 
+            n = Int(floor(xDim/1000))
+        else 
+            n = Int(floor(yDim/1000))
+        end
+
+        image = compression(image; n=n) 
+    end
+
     gaussianFilter = gaussian(gaussianDim, gaussianSigma) #create gaussian filter
 
     image = convolution_filter(image, gaussianFilter) #apply gaussian to image
@@ -297,9 +363,9 @@ function canny_edge_detection(RGBimage; lowThresholdRatio=0.05, highThresholdRat
 
     outImage = hysteresis(doubleThreshold[1], doubleThreshold[2], doubleThreshold[3]) #run hysteresis on image to turn weak edges into strong edges
 
-    outImage
+    outImage #maybe add "uncompressor" at the end here to go back to original dimensions of image. 
 
 end
 
-imshow(canny_edge_detection(RGBImage; gaussianDim=15, gaussianSigma=4))
-sleep(20)
+imshow(canny_edge_detection(RGBImage; lowThresholdRatio=0.05, highThresholdRatio=0.08, gaussianDim=21, gaussianSigma=4))
+sleep(30)
