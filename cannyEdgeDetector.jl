@@ -147,7 +147,7 @@ function non_max_suppression(edgeIntensity, angle)
 
 end
 
-function double_threshold(image, lowThresholdRatio=0.05, highThresholdRatio=0.09)
+function double_threshold(image; lowThresholdRatio=0.05, highThresholdRatio=0.09)
     """
     Applies double threshold to image, removing "wet garbage," and classifying weak
     and strong edges. 
@@ -260,6 +260,12 @@ function compression(image; n=3)
     n : int, optional
         Default: 3. Size of area that will be collapsed into a single pixel. The size of the 
         image will be reduced by a factor of 1/n^2. Only currently works for odd n
+    
+    Returns
+    -------
+
+    out: array
+        Output image.
 
     """
 
@@ -360,7 +366,7 @@ function canny_edge_detection(RGBimage; lowThresholdRatio=0.05, highThresholdRat
 
     nonMaxSupprImg = non_max_suppression(sobelImage[1], sobelImage[2]) #run non maximum suppression on image
 
-    doubleThreshold = double_threshold(nonMaxSupprImg) #run double thresholding on image 
+    doubleThreshold = double_threshold(nonMaxSupprImg; lowThresholdRatio=lowThresholdRatio, highThresholdRatio=highThresholdRatio) #run double thresholding on image 
 
     outImage = hysteresis(doubleThreshold[1], doubleThreshold[2], doubleThreshold[3]) #run hysteresis on image to turn weak edges into strong edges
 
@@ -371,7 +377,7 @@ function canny_edge_detection(RGBimage; lowThresholdRatio=0.05, highThresholdRat
 
 end
 
-edgeImage = canny_edge_detection(RGBImage; lowThresholdRatio=0.5, highThresholdRatio=0.9, gaussianDim=9, gaussianSigma=15)
+edgeImage = canny_edge_detection(RGBImage; lowThresholdRatio=0.3, highThresholdRatio=0.4, gaussianDim=15, gaussianSigma=5)
 
 edgeImage = colorview(Gray, edgeImage)
 
