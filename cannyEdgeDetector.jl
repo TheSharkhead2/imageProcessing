@@ -303,7 +303,7 @@ function compression(image; n=3)
 end
 
 
-function canny_edge_detection(RGBimage; lowThresholdRatio=0.05, highThresholdRatio=0.09, gaussianDim=9, gaussianSigma=1)
+function canny_edge_detection(RGBimage; lowThresholdRatio=0.05, highThresholdRatio=0.09, gaussianDim=9, gaussianSigma=1, compress=false)
     """
     Performs canny edge detection on Julia image. Returns new image currently with 255 as an edge and 0
     as no edge. (updating this to be convertable back to Julia image, between 0 and 1, would be ideal)
@@ -326,6 +326,9 @@ function canny_edge_detection(RGBimage; lowThresholdRatio=0.05, highThresholdRat
     gaussianSigma : Float 
         Sigma value for Gaussian 
 
+    compress : Bool, optional
+        Default: false. true if image should be compressed before processing... Changes dimensions of image currently 
+
     Returns
     -------
 
@@ -340,7 +343,7 @@ function canny_edge_detection(RGBimage; lowThresholdRatio=0.05, highThresholdRat
 
     xDim, yDim = size(image) #save dimensions of image
 
-    if (xDim/1000 > 2) || (yDim/1000 > 2) #if the image resolution is sufficiently large, compress it. This is for better edge detection (hopefully) and processing times
+    if compress && ((xDim/1000 > 2) || (yDim/1000 > 2)) #if the image resolution is sufficiently large, compress it. This is for better edge detection (hopefully) and processing times
         #take the largest of x or y to determine the compression amount (to get largest dimension closest to 1500 pixels)
         if xDim > yDim 
             n = Int(floor(xDim/1000))
