@@ -100,7 +100,8 @@ end
 
 function harris_corner_detection(image; threshold=0.2, gaussianSigma=1)
     """
-    Runs harris corner detection on an image. 
+    Runs harris corner detection on an image. I used this tutorial for help:
+    https://sbme-tutorials.github.io/2018/cv/notes/6_week6.html
 
     Parameters
     ----------
@@ -143,6 +144,6 @@ function harris_corner_detection(image; threshold=0.2, gaussianSigma=1)
     end
 
     colorview(RGB, image)
-    
+
 end
 
