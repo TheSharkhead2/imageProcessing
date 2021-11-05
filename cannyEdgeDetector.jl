@@ -2,8 +2,6 @@ include("./convolutionFilter.jl")
 include("./filters.jl")
 using Images, ImageView, FileIO, Statistics
 
-RGBImage = load("images/image.jpg") #load image
-
 function sobel_filter(image)
     """
     This function is meant to be the "part 2" of canny edge detection, applying sobel edge
@@ -377,10 +375,3 @@ function canny_edge_detection(RGBimage; lowThresholdRatio=0.05, highThresholdRat
 
 end
 
-edgeImage = canny_edge_detection(RGBImage; lowThresholdRatio=0.3, highThresholdRatio=0.4, gaussianDim=15, gaussianSigma=5)
-
-edgeImage = colorview(Gray, edgeImage)
-
-imshow(edgeImage)
-save("imageEdges.jpg", edgeImage)
-sleep(30)
