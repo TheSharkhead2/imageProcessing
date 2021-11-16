@@ -3,6 +3,9 @@ This file contains some functions and definitions of useful filters... IE Gaussi
 
 """
 
+#include convolutional filter package I made
+include("./convolutionFilter.jl")
+
 function gaussian(n, sigma=1)
     """
     Returns nxn gaussian matrix. 
@@ -41,4 +44,62 @@ function gaussian(n, sigma=1)
 
     out 
 
+end
+
+function sobelX(image)
+    """
+    Take in greyscale image and return sobelX filter run on the image. 
+
+    Parameters
+    ----------
+
+    image : array   
+        2d array representing the image
+    
+    Returns
+    -------
+
+    out : array 
+        Array representing input image run through a sobel filter in the x direction 
+
+    """
+
+    #define x direction sobel filter
+    Sx = [
+        1 2 1;
+        0 0 0;
+        -1 2 -1;
+    ]
+
+    convolution_filter(image, Sx) #run filter on image and return it
+
+end
+
+function sobelY(image)
+    """
+    Take in greyscale image and return sobelY filter run on the image. 
+
+    Parameters
+    ----------
+
+    image : array   
+        2d array representing the image
+    
+    Returns
+    -------
+
+    out : array 
+        Array representing input image run through a sobel filter in the y direction 
+
+    """
+
+    #define y direction sobel filter
+    Sy = [
+        1 0 -1;
+        2 0 -2;
+        1 0 -1;
+    ]
+
+    convolution_filter(image, Sy) #run filter on image and return it
+    
 end
