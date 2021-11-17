@@ -66,9 +66,9 @@ function sobelX(image)
 
     #define x direction sobel filter
     Sx = [
-        1 2 1;
-        0 0 0;
-        -1 2 -1;
+        -1 0 1;
+        -2 0 2;
+        -1 0 1;
     ]
 
     convolution_filter(image, Sx) #run filter on image and return it
@@ -95,11 +95,11 @@ function sobelY(image)
 
     #define y direction sobel filter
     Sy = [
-        1 0 -1;
-        2 0 -2;
-        1 0 -1;
+        1 2 1;
+        0 0 0;
+        -1 -2 -1;
     ]
 
     convolution_filter(image, Sy) #run filter on image and return it
-    
+
 end
