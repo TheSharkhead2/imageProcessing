@@ -3,7 +3,7 @@ include("./convolutionFilter.jl")
 include("./filters.jl")
 
 #import external libraries
-using Images, ImageView 
+using Images, ImageView, ProgressMeter
 
 function calculate_energy(img)
     """
@@ -59,6 +59,7 @@ function calculate_seam_X(imageEnergy)
 
     yValues = [endIndex] #empty list (initially include last index) to store the path of y values for least energy
 
+    #loop through all x values to find the ideal y values for the seam (this may not be as efficient as storing the seams as they are calculated, however this is simpliler for the time)
     for x in (xDim-1):-1:1
         relativeMinIndex = argmin(pathEnergies[x,(last(yValues)-1):(last(yValues)+1)]) #create list of three pixels touching above last best y value (in row below) and find minimum index of said list
         
@@ -72,32 +73,62 @@ function calculate_seam_X(imageEnergy)
 
 end
 
-function seam_carving(image)
+function remove_seam_X(image, yValues; imageType="RGB")
+    """
+
+
+    """
+
+    imageCopy = copy(image) #make copy of image
+
+    #create output images for RGB or Gray images 
+    if imageType == "RGB" 
+        out = zeros( (3, size(imageCopy)[2], size(imageCopy)[3]-1) ) #create empty output array for RGB image
+    elseif imageType == "Gray"
+        out = zeros( (size(imageCopy)[1], size(imageCopy)[2]-1) ) #create empty output array for Gray image
+    end
+
+    #loop through all y seam values and the corresponding index (which is the x value)
+    for (index, y) in enumerate(yValues)
+        if imageType == "RGB" #check to see if RGB image or Gray image
+
+            out[1, index, :] = deleteat!(imageCopy[1, index, :], y)
+            out[2, index, :] = deleteat!(imageCopy[2, index, :], y)
+            out[3, index, :] = deleteat!(imageCopy[3, index, :], y)
+            
+        elseif imageType == "Gray"
+            out[index, :] .= deleteat!(imageCopy[index, :], y) #remove information from the one pixel location for black/white images
+        end
+    end
+
+    out
+
+end
+
+function seam_carving(image, xReduction)
     """
     Description to be written
+
     
-    I used this to get an idea of what I have to do: https://karthikkaranth.me/blog/implementing-seam-carving-with-python/
 
     """
 
-    xDim, yDim = size(image) #save size of image
+    #get grayscale of image
+    grayImage = Gray.(image) 
+    grayImage = channelview(grayImage) #convert to array
 
-    grayImage = Gray.(image) #get grayscale of image
+    image = channelview(image) #convert to array
 
-    #convert Julia image objects to just arrays (easier to work with)
-    grayImage = channelview(grayImage)
-    image = channelview(image)
+    #loop for each row y being removed
+    @showprogress "Removing Seams... " for x in 1:xReduction
 
-    #calculate the energy of each pixel in the image
-    imageEnergy = calculate_energy(grayImage)
+        imageEnergy = calculate_energy(grayImage) #calculate the energy of each pixel in the image
 
-    ### TEST CODE ###
-    bestSeam = (calculate_seam_X(imageEnergy))
+        bestSeam = calculate_seam_X(imageEnergy) #calculate the best seam to remove
 
-    for x in 1:xDim
-        image[1, x, bestSeam[x]] = 1.0
-        image[2, x, bestSeam[x]] = 0.0
-        image[3, x, bestSeam[x]] = 0.0
+        image = remove_seam_X(image, bestSeam) #remove seam from image
+        grayImage = remove_seam_X(grayImage, bestSeam; imageType="Gray") #remove seam from gray image
+
     end
 
     image

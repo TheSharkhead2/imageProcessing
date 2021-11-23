@@ -71,7 +71,7 @@ function sobelX(image)
         -1 0 1;
     ]
 
-    convolution_filter(image, Sx) #run filter on image and return it
+    convolution_filter(image, Sx; displayTime=false) #run filter on image and return it
 
 end
 
@@ -100,6 +100,6 @@ function sobelY(image)
         -1 -2 -1;
     ]
 
-    convolution_filter(image, Sy) #run filter on image and return it
+    convolution_filter(image, Sy, displayTime=false) #run filter on image and return it
 
 end

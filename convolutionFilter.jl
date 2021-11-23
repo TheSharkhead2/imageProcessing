@@ -4,7 +4,7 @@ using ImageView
 using LinearAlgebra
 using Dates
 
-function convolution_filter(image, filter)
+function convolution_filter(image, filter; displayTime=true)
     """
     Applies a filter, filter, to the inputed image, image, using convolution. 
 
@@ -18,6 +18,9 @@ function convolution_filter(image, filter)
     filter : array
         A nxn array (where n is an odd number) that represents the filter that will be
         applied to the above image. 
+
+    displayTime : bool, optional
+        Default = true. If true, will print time it took filter to run after run
     
     Returns
     -------
@@ -86,7 +89,10 @@ function convolution_filter(image, filter)
     end
 
     totalTime = now() - startTime #take different between current time and start time to get time function took to run
-    println("Filter ran on image in $totalTime") #display runtime in print statement
+
+    if displayTime
+        println("Filter ran on image in $totalTime") #display runtime in print statement
+    end
 
     return out
 

@@ -6,11 +6,12 @@ bunch of random code in function files.
 #my packages being used
 include("./cannyEdgeDetector.jl")
 include("./harrisCorner.jl")
+include("./seamCarving.jl")
 
 #external packages 
 using Images, ImageView, FileIO
 
-RGBImage = load("images/waffle.jpg") #load image
+RGBImage = load("images/exampleImage.jpg") #load image
 
 # edgeImage = canny_edge_detection(RGBImage; lowThresholdRatio=0.07, highThresholdRatio=0.18, gaussianDim=15, gaussianSigma=5)
 
@@ -19,6 +20,9 @@ RGBImage = load("images/waffle.jpg") #load image
 # imshow(edgeImage)
 # save("imageEdges.jpg", edgeImage)
 
-imshow(harris_corner_detection(RGBImage))
+#imshow(harris_corner_detection(RGBImage))
+
+imshow(colorview(RGB, seam_carving(RGBImage, 300)))
+imshow(RGBImage)
 
 sleep(30)
