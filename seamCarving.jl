@@ -127,8 +127,10 @@ function seam_carving(image, xReduction)
         bestSeam = calculate_seam_X(imageEnergy) #calculate the best seam to remove
 
         image = remove_seam_X(image, bestSeam) #remove seam from image
-        grayImage = remove_seam_X(grayImage, bestSeam; imageType="Gray") #remove seam from gray image
+        # grayImage = remove_seam_X(grayImage, bestSeam; imageType="Gray") #remove seam from gray image
 
+        grayImage = channelview(Gray.(colorview(RGB, image))) #convert new RGB image to grayscale. This seems to be slightly faster than just removing the same seam from the gray image. more testing required.
+        
     end
 
     image
