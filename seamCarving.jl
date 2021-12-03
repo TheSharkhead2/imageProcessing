@@ -73,7 +73,7 @@ function calculate_seam_X(imageEnergy)
 
 end
 
-function remove_seam_X(image, yValues; imageType="RGB")
+function remove_seam_X(image, yValues; imageType="RGB", fileType="jpg")
     """
 
 
@@ -83,7 +83,12 @@ function remove_seam_X(image, yValues; imageType="RGB")
 
     #create output images for RGB or Gray images 
     if imageType == "RGB" 
-        out = Array{RGB{N0f8}, 2}(undef, size(imageCopy)[1], size(imageCopy)[2]-1) #create empty output array for RGB image
+        if fileType == "gif"
+            out = Array{RGBA{N0f8}, 2}(undef, size(imageCopy)[1], size(imageCopy)[2]-1) #create empty output array for RGB image (transparency layer if gif)
+        else
+            out = Array{RGB{N0f8}, 2}(undef, size(imageCopy)[1], size(imageCopy)[2]-1) #create empty output array for RGB image
+        end
+
     elseif imageType == "Gray"
         out = zeros( (size(imageCopy)[1], size(imageCopy)[2]-1) ) #create empty output array for Gray image
     end
@@ -91,10 +96,8 @@ function remove_seam_X(image, yValues; imageType="RGB")
     #loop through all y seam values and the corresponding index (which is the x value)
     for (index, y) in enumerate(yValues)
         if imageType == "RGB" #check to see if RGB image or Gray image
-
-            out[index, :] = deleteat!(imageCopy[index, :], y)
-            out[index, :] = deleteat!(imageCopy[index, :], y)
-            out[index, :] = deleteat!(imageCopy[index, :], y)
+            
+            out[index, :] = deleteat!(imageCopy[index, :], y) #remove pixel
             
         elseif imageType == "Gray"
             out[index, :] .= deleteat!(imageCopy[index, :], y) #remove information from the one pixel location for black/white images
@@ -113,11 +116,14 @@ function seam_carving(image, xReduction; fileType="jpg")
 
     """
 
+    xDim, yDim = size(image) #save size of image
+
     #get grayscale of image
     grayImage = Gray.(image) 
     grayImage = Float64.(grayImage) #convert to floats
 
-    if fileType == "apng" #check if output file type is apng
+    if fileType == "gif" #check if output file type is apng
+        image = RGBA.(image) #add transparency layer to image
         outImage = copy(image) #initialize output image as copy of og image if saving as apng (animated image). 
     end
 
@@ -128,12 +134,12 @@ function seam_carving(image, xReduction; fileType="jpg")
 
         bestSeam = calculate_seam_X(imageEnergy) #calculate the best seam to remove
 
-        image = remove_seam_X(image, bestSeam) #remove seam from image
+        image = remove_seam_X(image, bestSeam; fileType=fileType) #remove seam from image
 
-        if fileType == "apng"
-            ### ERROR: this doesn't work because of dim mismatch (new image is smaller)... Probably fix with padding ###
+        if fileType == "gif"
+            ### ERROR: this now doesn't properly save a gif ###
 
-            outImage = cat(outImage, image; dims=3) #if saving as animated apng, concatinate new image onto output
+            outImage = cat(outImage, Array{RGBA{N0f8}}(padarray(image, Fill( RGBA{N0f8}(1.0,1.0,1.0,1.0), (0,0), (0, yDim-size(image)[2]) ))); dims=3) #if saving as animated gif, concatinate new image onto output. Extend new image to have empty transparent pixels on end
         end
 
         grayImage = Float64.(Gray.(image)) #convert image to grayscale
@@ -141,7 +147,7 @@ function seam_carving(image, xReduction; fileType="jpg")
     end
 
     #return early apng file if that is output
-    if fileType == "apng"
+    if fileType == "gif"
         return outImage
     end
 
