@@ -83,7 +83,7 @@ function remove_seam_X(image, yValues; imageType="RGB")
 
     #create output images for RGB or Gray images 
     if imageType == "RGB" 
-        out = zeros( (3, size(imageCopy)[2], size(imageCopy)[3]-1) ) #create empty output array for RGB image
+        out = Array{RGB{N0f8}, 2}(undef, size(imageCopy)[1], size(imageCopy)[2]-1) #create empty output array for RGB image
     elseif imageType == "Gray"
         out = zeros( (size(imageCopy)[1], size(imageCopy)[2]-1) ) #create empty output array for Gray image
     end
@@ -92,9 +92,9 @@ function remove_seam_X(image, yValues; imageType="RGB")
     for (index, y) in enumerate(yValues)
         if imageType == "RGB" #check to see if RGB image or Gray image
 
-            out[1, index, :] = deleteat!(imageCopy[1, index, :], y)
-            out[2, index, :] = deleteat!(imageCopy[2, index, :], y)
-            out[3, index, :] = deleteat!(imageCopy[3, index, :], y)
+            out[index, :] = deleteat!(imageCopy[index, :], y)
+            out[index, :] = deleteat!(imageCopy[index, :], y)
+            out[index, :] = deleteat!(imageCopy[index, :], y)
             
         elseif imageType == "Gray"
             out[index, :] .= deleteat!(imageCopy[index, :], y) #remove information from the one pixel location for black/white images
@@ -105,7 +105,7 @@ function remove_seam_X(image, yValues; imageType="RGB")
 
 end
 
-function seam_carving(image, xReduction)
+function seam_carving(image, xReduction; fileType="jpg")
     """
     Description to be written
 
@@ -115,9 +115,9 @@ function seam_carving(image, xReduction)
 
     #get grayscale of image
     grayImage = Gray.(image) 
-    grayImage = channelview(grayImage) #convert to array
+    grayImage = Float64.(grayImage) #convert to floats
 
-    image = channelview(image) #convert to array
+    # image = channelview(image) #convert to array
 
     #loop for each row y being removed
     @showprogress "Removing Seams... " for x in 1:xReduction
@@ -129,8 +129,9 @@ function seam_carving(image, xReduction)
         image = remove_seam_X(image, bestSeam) #remove seam from image
         # grayImage = remove_seam_X(grayImage, bestSeam; imageType="Gray") #remove seam from gray image
 
-        grayImage = channelview(Gray.(colorview(RGB, image))) #convert new RGB image to grayscale. This seems to be slightly faster than just removing the same seam from the gray image. more testing required.
-        
+        # grayImage = channelview(Gray.(colorview(RGB, image))) #convert new RGB image to grayscale. This seems to be slightly faster than just removing the same seam from the gray image. more testing required.
+        grayImage = Float64.(Gray.(image))
+
     end
 
     image
@@ -139,10 +140,3 @@ function seam_carving(image, xReduction)
 end
 
 
-"""
-Dynamic approach to seam carving: 
-- for each pixel in the second row, the least energy seam is the minimum of the least energies of the connected pixels above it (ie, if it bordered energies of 0.5, 0.7, 0.3 then the lowest energy is the 0.3 pixel path)
-- use this to compute the energy of the lowest path to the second row, then the third row is the same, however with the added energy of the first and second row 
-- do this for all rows until the bottom and take the lowest one, this is the path
-
-"""
