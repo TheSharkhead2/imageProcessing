@@ -117,7 +117,9 @@ function seam_carving(image, xReduction; fileType="jpg")
     grayImage = Gray.(image) 
     grayImage = Float64.(grayImage) #convert to floats
 
-    # image = channelview(image) #convert to array
+    if fileType == "apng" #check if output file type is apng
+        outImage = copy(image) #initialize output image as copy of og image if saving as apng (animated image). 
+    end
 
     #loop for each row y being removed
     @showprogress "Removing Seams... " for x in 1:xReduction
@@ -127,11 +129,20 @@ function seam_carving(image, xReduction; fileType="jpg")
         bestSeam = calculate_seam_X(imageEnergy) #calculate the best seam to remove
 
         image = remove_seam_X(image, bestSeam) #remove seam from image
-        # grayImage = remove_seam_X(grayImage, bestSeam; imageType="Gray") #remove seam from gray image
 
-        # grayImage = channelview(Gray.(colorview(RGB, image))) #convert new RGB image to grayscale. This seems to be slightly faster than just removing the same seam from the gray image. more testing required.
-        grayImage = Float64.(Gray.(image))
+        if fileType == "apng"
+            ### ERROR: this doesn't work because of dim mismatch (new image is smaller)... Probably fix with padding ###
 
+            outImage = cat(outImage, image; dims=3) #if saving as animated apng, concatinate new image onto output
+        end
+
+        grayImage = Float64.(Gray.(image)) #convert image to grayscale
+
+    end
+
+    #return early apng file if that is output
+    if fileType == "apng"
+        return outImage
     end
 
     image
