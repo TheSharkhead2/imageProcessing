@@ -11,7 +11,7 @@ include("./seamCarving.jl")
 #external packages 
 using Images, ImageView, FileIO
 
-RGBImage = load("images/exampleImage.jpg") #load image
+RGBImage = load("images/testImage10.jpg") #load image
 
 # edgeImage = canny_edge_detection(RGBImage; lowThresholdRatio=0.07, highThresholdRatio=0.18, gaussianDim=15, gaussianSigma=5)
 
@@ -22,7 +22,11 @@ RGBImage = load("images/exampleImage.jpg") #load image
 
 #imshow(harris_corner_detection(RGBImage))
 
-imshow(colorview(RGB, seam_carving(RGBImage, 300)))
-imshow(RGBImage)
+seamCarvingImage = seam_carving(RGBImage; xReduction=100, fileType="jpg")
 
-sleep(30)
+# imshow(seamCarvingImage)
+# imshow(RGBImage)
+
+save("croppedImage.jpg", seamCarvingImage)
+
+# sleep(30)

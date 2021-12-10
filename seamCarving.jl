@@ -3,7 +3,7 @@ include("./convolutionFilter.jl")
 include("./filters.jl")
 
 #import external libraries
-using Images, ImageView, ProgressMeter
+using Images, ImageView, ProgressMeter, ImageTransformations, CoordinateTransformations, Rotations
 
 function calculate_energy(img)
     """
@@ -108,7 +108,43 @@ function remove_seam_X(image, yValues; imageType="RGB", fileType="jpg")
 
 end
 
-function seam_carving(image, xReduction; fileType="jpg")
+function calculate_seam_Y(imageEnergy)
+    """
+    Basically takes in energy, rotates it, runs calculate_seam_X. 
+    This would then return the x values that need to be removed and
+    is also the lazy way of coding this 
+
+    """
+
+    ### NEED TO FIND BETTER ROTATION METHOD AS THIS LOSES INFORMATION ###
+
+    #image rotation from here: https://juliaimages.org/latest/pkgs/transformations/ ... this is the most I have used libraries for things so far so I might replace this at some point with my own code
+    tranfm = recenter(RotMatrix(-pi/2), center(imageEnergy)) #get rotation transform for image. 
+    rotImgEng = warp(imageEnergy, tranfm) #warp image with transformation
+
+    xValues = calculate_seam_X(rotImgEng) #by rotating the image and putting it through the x algorithm, this finds the xValues that should be removed for removing seams in the y direction
+
+    xValues
+
+end
+
+function remove_seam_Y(image, xValues; imageType="RGB", fileType="jpg")
+    """
+    This takes in an image and xValues, rotates the image, runs removing x seams algorithm assuming
+    x values are y values (they are in this rotation case), and then rotate back
+    This is a lazy way of programming this and might be quite inefficient
+
+    """
+    #image rotation from here: https://juliaimages.org/latest/pkgs/transformations/ ... this is the most I have used libraries for things so far so I might replace this at some point with my own code
+    tranfm = recenter(RotMatrix(-pi/2), center(imageEnergy)) #get rotation transform for image. 
+    rotImg = warp(image, tranfm) #rotate image
+
+end
+
+
+
+
+function seam_carving(image; yReduction=0, xReduction=0, fileType="jpg")
     """
     Description to be written
 
@@ -117,6 +153,10 @@ function seam_carving(image, xReduction; fileType="jpg")
     """
 
     xDim, yDim = size(image) #save size of image
+
+    # if (xReduction = 0) && (yReduction > 0) #if only yReduction is specified, then only reducing in y direction 
+
+
 
     #get grayscale of image
     grayImage = Gray.(image) 
@@ -137,7 +177,6 @@ function seam_carving(image, xReduction; fileType="jpg")
         image = remove_seam_X(image, bestSeam; fileType=fileType) #remove seam from image
 
         if fileType == "gif"
-            ### ERROR: this now doesn't properly save a gif ###
 
             outImage = cat(outImage, Array{RGBA{N0f8}}(padarray(image, Fill( RGBA{N0f8}(1.0,1.0,1.0,1.0), (0,0), (0, yDim-size(image)[2]) ))); dims=3) #if saving as animated gif, concatinate new image onto output. Extend new image to have empty transparent pixels on end
         end
